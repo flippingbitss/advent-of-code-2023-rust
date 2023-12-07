@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 struct Grid(Vec<Vec<char>>);
 
 impl Grid {
@@ -40,7 +42,10 @@ const DIRS: [(isize, isize); 8] = [
     (-1, 1),
 ];
 
-pub fn part_one(input: &str) -> usize {
+type GearPos = (usize, usize);
+type PartNum = usize;
+
+fn find_attached_numbers(input: &str) -> Vec<(PartNum, GearPos)> {
     let grid = parse_grid(input);
 
     let (width, height) = grid.size();
@@ -49,8 +54,8 @@ pub fn part_one(input: &str) -> usize {
     let mut curr_high = 0;
     let mut track = false;
     let mut attached = false;
-    let mut total = 0;
-
+    let mut gear_pos = (0, 0);
+    let mut results = Vec::new();
     for r in 0..height {
         for c in 0..width {
             let ch = grid.get(c as isize, r as isize).unwrap();
@@ -67,25 +72,52 @@ pub fn part_one(input: &str) -> usize {
                     let rn = r as isize + dir.1;
                     if let Some(nh) = grid.get(cn, rn) {
                         if nh != '.' && !nh.is_digit(10) {
+                            gear_pos = (cn as usize, rn as usize);
                             attached = true;
                         }
                     }
                 }
                 if c == width - 1 {
                     if attached {
-                        total += grid.parse_num(r, curr_low, curr_high);
+                        let num = grid.parse_num(r, curr_low, curr_high);
+                        results.push((num, gear_pos));
                         attached = false;
                     }
                     track = false;
                 }
             } else {
                 if attached {
-                    total += grid.parse_num(r, curr_low, curr_high);
+                    let num = grid.parse_num(r, curr_low, curr_high);
+                    results.push((num, gear_pos));
                     attached = false;
                 }
                 track = false;
             }
         }
     }
-    total
+    results
+}
+
+pub fn part_one(input: &str) -> usize {
+    let attachments = find_attached_numbers(input);
+    attachments.iter().map(|x| x.0).sum()
+}
+
+pub fn part_two(input: &str) -> usize {
+    let attachments = find_attached_numbers(input);
+
+    let mut gears_to_parts = attachments
+        .iter()
+        .map(|x| (x.1, Vec::new()))
+        .collect::<HashMap<_, _>>();
+
+    attachments.into_iter().for_each(|(pn, gear_pos)| {
+        gears_to_parts.entry(gear_pos).or_default().push(pn);
+    });
+
+    gears_to_parts
+        .values()
+        .filter(|pns| pns.len() == 2)
+        .map(|pns| pns.iter().product::<usize>())
+        .sum()
 }
