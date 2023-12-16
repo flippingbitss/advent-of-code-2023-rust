@@ -5,10 +5,12 @@ mod day04;
 mod day05;
 mod day06;
 mod day07;
+mod day08;
+mod day09;
 
 fn main() {
-    let answer_one = day07::part_one(include_str!("../inputs/day07.in"));
+    let answer_one = day09::part_one(include_str!("../inputs/day09.in"));
     println!("{}", answer_one);
-        let answer_two = day07::part_two(include_str!("../inputs/day07.in"));
+    let answer_two = day09::part_two(include_str!("../inputs/day09.in"));
     println!("{}", answer_two);
 }
