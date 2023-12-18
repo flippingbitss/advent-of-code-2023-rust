@@ -45,59 +45,46 @@ pub fn part_two(input: &str) -> usize {
         .filter(|k| k.chars().last().unwrap() == 'A')
         .collect::<Vec<_>>();
 
-    let mut steps = 0;
-
-    let mut paths = vec![(0, vec![]); starting_nodes.len()];
+    let mut loop_sizes = vec![0; starting_nodes.len()];
+    let mut paths = vec![vec![]; starting_nodes.len()];
 
     for (i, node) in starting_nodes.iter_mut().enumerate() {
         let mut first = false;
         for dir in dirs.iter().cycle() {
             if node.ends_with("Z") {
                 if !first {
-                    paths[i].1.push(*node);
+                    paths[i].push(*node);
                     first = true;
                 } else {
                     break;
                 }
             }
             if !first {
-                paths[i].1.push(*node);
+                paths[i].push(*node);
             } else {
-                paths[i].0 += 1;
+                loop_sizes[i] += 1;
             }
             let next_node = map.get(*node).and_then(|v| v.get(*dir)).unwrap();
             *node = next_node;
         }
     }
-    let mut steps = paths.iter().map(|(_, p)| p.len()).min().unwrap();
-    let mut step_size = paths.iter().map(|x| x.0).min().unwrap();
 
- //   println!("{paths:?}");
-    let mut nodes = vec![""; paths.len()];
-    dbg!(steps);
-    dbg!(step_size);
-    println!();
+    let min_loop = loop_sizes.iter().min().unwrap();
+    let min_path_len = paths.iter().map(|p| p.len()).min().unwrap();
+    let lcm_total = loop_sizes.iter().fold(1, |acc, &x| lcm(acc, x));
+    
+    lcm_total - (min_path_len - min_loop - 1)
+}
 
-    // dbg!((steps+step_size-1));
-    for step in ((steps - 2)..).step_by(step_size) {
-        for (i, (loop_size, path)) in paths.iter().enumerate() {
-            let looped_path = &path[(path.len() - loop_size)..];
-//            println!("{looped_path:?}");
-            let index = step % (looped_path.len());
-            let next = looped_path[index];
-            //dbg!(step);
-            //dbg!(loop_size);
-            //dbg!(index);
-            //dbg!(next);
-            nodes[i] = looped_path[index];
-
-            //println!("-----");
-        }
-
-        steps += (step_size - 1);
-        if nodes.iter().all(|n| n.ends_with("Z")) {
-            break;
-        }
+fn gcd(a: usize, b: usize) -> usize {
+    if b == 0 {
+        a
+    } else {
+        gcd(b, a % b)
     }
-    steps
+}
+
+fn lcm(a: usize, b: usize) -> usize {
+    // lcm(a,b) * gcd(a,b) = a * b;
+    (a * b) / gcd(a, b)
 }
